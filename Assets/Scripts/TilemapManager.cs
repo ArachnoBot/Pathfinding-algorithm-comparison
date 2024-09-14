@@ -7,32 +7,43 @@ using UnityEngine.Tilemaps;
 
 public class TilemapManager : MonoBehaviour
 {
+    public Color startColor;
+    public Color endColor;
+    public Color openColor;
+    public Color closedColor;
+
     private Tilemap tilemap;
-    private Tile wallTile;
+
+    private Tile startTile;
+    private Tile endTile;
     private Tile openTile;
     private Tile closedTile;
+    private Tile wallTile;
 
-    void Start()
+    private void Start()
     {
         tilemap = GetComponentInChildren<Tilemap>();
 
+        startTile = CreateTile(startColor);
+        endTile = CreateTile(endColor);
+        openTile = CreateTile(openColor);
+        closedTile = CreateTile(closedColor);
         wallTile = CreateTile(Color.black);
-        openTile = CreateTile(Color.green);
-        closedTile = CreateTile(Color.cyan);
     }
 
-    private Tile CreateTile(Color color)
+    public void MoveTilemap(float x, float y)
     {
-        Texture2D texture = new(1, 1);
-        texture.SetPixel(0, 0, color);
-        texture.Apply();
+        gameObject.transform.position = new Vector3(x, y, 0);
+    }
 
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 1);
+    public void AddStartTile(Node node)
+    {
+        tilemap.SetTile(new(node.x, node.y, 0), startTile);
+    }
 
-        Tile tile = ScriptableObject.CreateInstance<Tile>();
-        tile.sprite = sprite;
-
-        return tile;
+    public void AddEndTile(Node node)
+    {
+        tilemap.SetTile(new(node.x, node.y, 0), endTile);
     }
 
     public void AddClosedTile(Node node, bool addCostTexts = true)
@@ -54,6 +65,20 @@ public class TilemapManager : MonoBehaviour
         tilemap.SetTile(new Vector3Int(x, y, 0), wallTile);
     }
 
+    private Tile CreateTile(Color color)
+    {
+        Texture2D texture = new(1, 1);
+        texture.SetPixel(0, 0, color);
+        texture.Apply();
+
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 1);
+
+        Tile tile = ScriptableObject.CreateInstance<Tile>();
+        tile.sprite = sprite;
+
+        return tile;
+    }
+
     private void AddCostTexts(Node node) // Top left is G, middle is F and bottom right is H
     {
         GameObject textObj;
@@ -68,7 +93,7 @@ public class TilemapManager : MonoBehaviour
         else
         {
             textObj = new(textName);
-            textObj.transform.position = new(node.x, node.y, -1);
+            textObj.transform.position = new Vector3(node.x, node.y, -1) + gameObject.transform.position;
 
             GameObject fCostObj = new("fCostObj");
             fCostObj.transform.SetParent(textObj.transform);

@@ -253,7 +253,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 5, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -271,7 +271,7 @@ GameObject:
   - component: {fileID: 520306210}
   - component: {fileID: 520306209}
   m_Layer: 0
-  m_Name: Quad
+  m_Name: GridQuad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -336,7 +336,7 @@ Transform:
   m_GameObject: {fileID: 520306208}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 5, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -5}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -401,6 +401,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db586294816a8684f8bc6878460f6db4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  startColor: {r: 0, g: 0.6, b: 0.13023263, a: 1}
+  endColor: {r: 0.6, g: 0, b: 0, a: 1}
+  openColor: {r: 0, g: 0.5179992, b: 1, a: 1}
+  closedColor: {r: 0.5471698, g: 0.5471698, b: 0.5471698, a: 1}
 --- !u!114 &1081915512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -413,9 +417,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27ace7c96237b3c44880b095eefbfb98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  start: {x: 0, y: 0}
-  end: {x: 9, y: 8}
+  start: {x: 2, y: 6}
+  end: {x: 17, y: 6}
   map: {fileID: 2800000, guid: a87864d3f70008f43b249359e4ba3de3, type: 3}
+  gridQuadObj: {fileID: 520306208}
 --- !u!1 &1445839962
 GameObject:
   m_ObjectHideFlags: 0

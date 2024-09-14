@@ -6,20 +6,22 @@ using UnityEngine;
 public class Astar
 {
     private Node[,] nodes;
-    private int gridSize;
+    private int gridWidth;
+    private int gridHeight;
     private TilemapManager tilemapManager;
 
     public Astar(Node[,] nodes, TilemapManager tilemapManager)
     {
         this.nodes = nodes;
-        gridSize = nodes.GetLength(0);
+        gridWidth = nodes.GetLength(0);
+        gridHeight = nodes.GetLength(1);
 
         this.tilemapManager = tilemapManager;
     }
 
     public List<Node> FindPath(Node start, Node end)
     {
-        Heap openSet = new(gridSize);
+        NodeHeap openSet = new(gridWidth * gridHeight);
         HashSet<Node> closedSet = new();
 
         start.gCost = 0;
@@ -30,7 +32,7 @@ public class Astar
         {
             Node currentNode = openSet.RemoveFirst();
             closedSet.Add(currentNode);
-            tilemapManager.AddClosedTile(currentNode);
+            //tilemapManager.AddClosedTile(currentNode, false);
 
             if (currentNode == end)
             {
@@ -43,7 +45,7 @@ public class Astar
                 for (int y = currentNode.y - 1; y <= currentNode.y + 1; y++)
                 {
                     if (x == currentNode.x && y == currentNode.y) continue; // Not a neighbor
-                    if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) continue; // Outside grid bounds
+                    if (!IsWithinGrid(x, y)) continue; // Outside grid bounds
 
                     Node neighbor = nodes[x, y];
 
@@ -59,7 +61,7 @@ public class Astar
                         if (!openSet.Contains(neighbor))
                         {
                             openSet.Add(neighbor);
-                            tilemapManager.AddOpenTile(neighbor);
+                            //tilemapManager.AddOpenTile(neighbor, false);
                         }
                         else
                         {
@@ -75,7 +77,10 @@ public class Astar
 
     public IEnumerator FindPathVisual(Node start, Node end)
     {
-        Heap openSet = new(gridSize);
+        tilemapManager.AddStartTile(start);
+        tilemapManager.AddEndTile(end);
+
+        NodeHeap openSet = new(gridWidth * gridHeight);
         HashSet<Node> closedSet = new();
 
         start.gCost = 0;
@@ -100,7 +105,7 @@ public class Astar
                 for (int y = currentNode.y - 1; y <= currentNode.y + 1; y++)
                 {
                     if (x == currentNode.x && y == currentNode.y) continue; // Not a neighbor
-                    if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) continue; // Outside grid bounds
+                    if (!IsWithinGrid(x, y)) continue; // Outside grid bounds
 
                     Node neighbor = nodes[x, y];
 
@@ -115,7 +120,6 @@ public class Astar
 
                         if (!openSet.Contains(neighbor))
                         {
-                            Debug.Log($"{neighbor.x}, {neighbor.y} added to openset");
                             openSet.Add(neighbor);
                             tilemapManager.AddOpenTile(neighbor);
                         }
@@ -126,12 +130,16 @@ public class Astar
                     }
                 }
             }
-            Debug.Log("Count: " + openSet.Count);
             yield return new WaitForSecondsRealtime(.2f);
         }
 
         Debug.LogWarning("No path found!");
         yield break;
+    }
+
+    private bool IsWithinGrid(int x, int y)
+    {
+        return x >= 0 && x < gridWidth && y >= 0 && y < gridHeight;
     }
 
     private List<Node> RetracePath(Node startNode, Node endNode)
@@ -150,22 +158,6 @@ public class Astar
         return path;
     }
 
-    private int GetManhattanDistance(Node nodeA, Node nodeB)
-    {
-        return Math.Abs(nodeA.x - nodeB.x) + Mathf.Abs(nodeA.y - nodeB.y);
-    }
-
-    private int GetOctileDistance(Node nodeA, Node nodeB)
-    {
-        int distX = Math.Abs(nodeA.x - nodeB.x);
-        int distY = Math.Abs(nodeA.y - nodeB.y);
-
-        if (distX > distY)
-            return 14 * distY + 10 * (distX - distY);
-
-        return 14 * distX + 10 * (distY - distX);
-    }
-
     private int GetDistance(Node nodeA, Node nodeB)
     {
         int distX = Math.Abs(nodeA.x - nodeB.x);
@@ -176,4 +168,20 @@ public class Astar
 
         return 14 * distX + 10 * (distY - distX);
     }
+
+    /*
+
+    Manhattan distance:
+    return Math.Abs(nodeA.x - nodeB.x) + Mathf.Abs(nodeA.y - nodeB.y);
+
+    Octile distance:
+    int distX = Math.Abs(nodeA.x - nodeB.x);
+    int distY = Math.Abs(nodeA.y - nodeB.y);
+
+    if (distX > distY)
+        return 14 * distY + 10 * (distX - distY);
+
+    return 14 * distX + 10 * (distY - distX);
+    
+    */
 }

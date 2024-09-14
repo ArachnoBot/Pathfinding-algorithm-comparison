@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class Node
@@ -28,12 +28,12 @@ public class Node
 }
 
 
-public class Heap
+public class NodeHeap
 {
     Node[] nodes;
     int nodeCount;
 
-    public Heap(int gridSize)
+    public NodeHeap(int gridSize)
     {
         nodes = new Node[gridSize * gridSize];
     }
@@ -48,12 +48,12 @@ public class Heap
 
     public Node RemoveFirst()
     {
-        Node firstItem = nodes[0];
+        Node smallestNode = nodes[0];
         nodeCount--;
         nodes[0] = nodes[nodeCount];
         nodes[0].heapIndex = 0;
         SortDown(nodes[0]);
-        return firstItem;
+        return smallestNode;
     }
 
     public void UpdateItem(Node node)
@@ -71,13 +71,26 @@ public class Heap
 
     public bool Contains(Node node)
     {
-        return Equals(nodes[node.heapIndex], node);
+        return node.heapIndex >= 0 && node.heapIndex < nodeCount && nodes[node.heapIndex] == node;
+    }
+
+    public void Clear()
+    {
+        Array.Clear(nodes, 0, nodeCount);
+        nodeCount = 0;
     }
 
     void SortDown(Node node)
     {
+        int count = 0;
         while (true)
         {
+            if (count++ > 1000)
+            {
+                Debug.Log($"sortdown, node {node.x}, {node.y}");
+                return;
+            }
+
             int leftChildIndex = node.heapIndex * 2 + 1;
             int rightChildIndex = node.heapIndex * 2 + 2;
             int smallerChildIndex = node.heapIndex;
@@ -101,8 +114,14 @@ public class Heap
 
     void SortUp(Node node)
     {
+        int count = 0;
         while (node.heapIndex > 0) // Do not sort if root
         {
+            if (count++ > 1000)
+            {
+                Debug.Log($"sortup, node {node.x}, {node.y}");
+                return;
+            }
             int parentIndex = (node.heapIndex - 1) / 2;
             Node parentItem = nodes[parentIndex];
 
