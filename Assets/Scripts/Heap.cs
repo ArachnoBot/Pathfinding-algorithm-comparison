@@ -35,11 +35,17 @@ public class NodeHeap
 
     public NodeHeap(int gridSize)
     {
-        nodes = new Node[gridSize * gridSize];
+        nodes = new Node[gridSize];
     }
 
     public void Add(Node node)
     {
+        if (Contains(node))
+        {
+            Debug.LogWarning($"Node {node.x}, {node.y} already in heap");
+            return;
+        }
+
         node.heapIndex = nodeCount;
         nodes[nodeCount] = node;
         SortUp(node);

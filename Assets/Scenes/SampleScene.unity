@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -259,6 +260,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f39c9d9d0df5e046a5c5e3dddea1af6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 50
+  smoothTime: 0.3
+  zoomSpeed: 50
+  minZoom: 10
+  maxZoom: 1000
+  tileCountX: 10
+  tileCountY: 10
 --- !u!1 &520306208
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,7 +356,7 @@ Transform:
   m_GameObject: {fileID: 520306208}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -5}
+  m_LocalPosition: {x: 0, y: 0, z: -2}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -418,9 +438,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   start: {x: 2, y: 6}
-  end: {x: 17, y: 6}
-  map: {fileID: 2800000, guid: a87864d3f70008f43b249359e4ba3de3, type: 3}
+  end: {x: 109, y: 234}
+  map: {fileID: 2800000, guid: b71ca5a5ed782c845823a4dce835f02c, type: 3}
   gridQuadObj: {fileID: 520306208}
+  algoDelay: 0
+  testIterations: 500
 --- !u!1 &1445839962
 GameObject:
   m_ObjectHideFlags: 0

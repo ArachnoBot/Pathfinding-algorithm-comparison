@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class JPS
+public class JPS : IAlgorithm
 {
     private Node[,] nodes;
     private int gridWidth;
@@ -31,9 +31,6 @@ public class JPS
 
     public List<Node> FindPath(Node start, Node end)
     {
-        tilemapManager.AddStartTile(start);
-        tilemapManager.AddEndTile(end);
-
         NodeHeap openSet = new(gridWidth * gridHeight);
         HashSet<Node> closedSet = new();
 
@@ -42,14 +39,18 @@ public class JPS
 
         foreach (var direction in directions) // Do a jump in every direction from start
         {
-            Node jumpPoint = Jump(start, direction, end);
-            if (jumpPoint != null && jumpPoint.walkable)
+            Node jumpPoint = Jump(start.x + direction.x, start.y + direction.y, direction, end);
+            if (jumpPoint == end)
+            {
+                jumpPoint.parent = start;
+                return RetracePath(start, end);
+            }
+            else if (jumpPoint != null && jumpPoint.walkable)
             {
                 jumpPoint.parent = start;
                 jumpPoint.gCost = GetDistance(jumpPoint, start);
                 jumpPoint.hCost = GetDistance(jumpPoint, end);
                 openSet.Add(jumpPoint);
-                tilemapManager.AddOpenTile(jumpPoint);
             }
         }
 
@@ -58,38 +59,40 @@ public class JPS
             Node currentNode = openSet.RemoveFirst();
 
             closedSet.Add(currentNode);
-            tilemapManager.AddClosedTile(currentNode, false);
 
-            foreach (Node node in GetJumpPoints(currentNode, end))
+            foreach (Node jumpNode in GetJumpPoints(currentNode, end))
             {
-                if (node == end)
-                {
-                    Debug.Log(closedSet.Count + openSet.Count + " nodes visited");
-                    node.parent = currentNode;
-                    node.gCost = node.parent.gCost + GetDistance(node, node.parent);
-                    return RetracePath(start, end);
-                }
+                if (closedSet.Contains(jumpNode)) continue;
 
-                if (!closedSet.Contains(node) && node.walkable)
+                int newGCost = currentNode.gCost + GetDistance(currentNode, jumpNode);
+                if (newGCost < jumpNode.gCost || !openSet.Contains(jumpNode))
                 {
-                    node.parent = currentNode;
-                    node.gCost = node.parent.gCost + GetDistance(node, node.parent);
-                    node.hCost = GetDistance(node, end);
-                    openSet.Add(node);
-                    tilemapManager.AddOpenTile(node);
+                    jumpNode.gCost = newGCost;
+                    jumpNode.hCost = GetDistance(jumpNode, end);
+                    jumpNode.parent = currentNode;
+
+                    if (jumpNode == end)
+                    {
+                        return RetracePath(start, end);
+                    }
+
+                    if (!openSet.Contains(jumpNode))
+                    {
+                        openSet.Add(jumpNode);
+                    }
+                    else
+                    {
+                        openSet.UpdateItem(jumpNode);
+                    }
                 }
             }
         }
 
-        Debug.LogWarning("No path found");
         return null;
     }
 
-    public IEnumerator FindPathVisual(Node start, Node end)
+    public IEnumerator FindPathVisual(Node start, Node end, float delay)
     {
-        tilemapManager.AddStartTile(start);
-        tilemapManager.AddEndTile(end);
-
         NodeHeap openSet = new(gridWidth * gridHeight);
         HashSet<Node> closedSet = new();
 
@@ -98,48 +101,57 @@ public class JPS
 
         foreach (var direction in directions) // Do a jump in every direction from start
         {
-            Node jumpPoint = Jump(start, direction, end);
+            Node jumpPoint = Jump(start.x + direction.x, start.y + direction.y, direction, end);
             if (jumpPoint != null && jumpPoint.walkable)
             {
                 jumpPoint.parent = start;
                 jumpPoint.gCost = GetDistance(jumpPoint, start);
                 jumpPoint.hCost = GetDistance(jumpPoint, end);
                 openSet.Add(jumpPoint);
-                tilemapManager.AddOpenTile(jumpPoint);
+                tilemapManager.AddOpenTile(jumpPoint, delay > 0);
             }
         }
-
-        yield return new WaitForSecondsRealtime(.5f);
-        Debug.Log("Initial positions gotten");
 
         while (openSet.Count > 0)
         {
             Node currentNode = openSet.RemoveFirst();
 
             closedSet.Add(currentNode);
-            tilemapManager.AddClosedTile(currentNode, false);
+            tilemapManager.AddClosedTile(currentNode, delay > 0);
 
-            foreach (Node node in GetJumpPoints(currentNode, end))
+            foreach (Node jumpNode in GetJumpPoints(currentNode, end))
             {
-                if (node == end)
+                if (jumpNode == end)
                 {
                     Debug.Log(closedSet.Count + openSet.Count + " nodes visited");
                     yield break;
                 }
 
-                if (!closedSet.Contains(node))
+                if (closedSet.Contains(jumpNode)) continue;
+
+                int newGCost = currentNode.gCost + GetDistance(currentNode, jumpNode);
+                if (newGCost < jumpNode.gCost || !openSet.Contains(jumpNode))
                 {
-                    node.parent = currentNode;
-                    node.gCost = node.parent.gCost + GetDistance(node, node.parent);
-                    node.hCost = GetDistance(node, end);
-                    openSet.Add(node);
-                    tilemapManager.AddOpenTile(node);
+                    jumpNode.gCost = newGCost;
+                    jumpNode.hCost = GetDistance(jumpNode, end);
+                    jumpNode.parent = currentNode;
+
+                    //Debug.Log($"Node {jumpNode.x}, {jumpNode.y} (g: {jumpNode.gCost}) now has parent {currentNode.x}, {currentNode.y} (g: {currentNode.gCost})");
+
+                    if (!openSet.Contains(jumpNode))
+                    {
+                        openSet.Add(jumpNode);
+                        tilemapManager.AddOpenTile(jumpNode, delay > 0);
+                    }
+                    else
+                    {
+                        openSet.UpdateItem(jumpNode);
+                    }
                 }
             }
-            yield return new WaitForSecondsRealtime(0.5f);
+            if (delay > 0) yield return new WaitForSecondsRealtime(delay);
         }
 
-        Debug.LogWarning("No path found");
         yield break;
     }
 
@@ -152,11 +164,8 @@ public class JPS
 
         foreach (Node neighbor in neighbors)
         {
-            (int x, int y) dir = (Math.Clamp(neighbor.x - neighbor.parent.x, -1, 1), Math.Clamp(neighbor.y - neighbor.parent.y, -1, 1));
-            Debug.Log($"Node {neighbor.x}, {neighbor.y} jumping in dir " + dir);
-            if ((jumpNode = Jump(neighbor, dir, end)) != null)
+            if ((jumpNode = Jump(neighbor.x, neighbor.y, GetDirection(node, neighbor), end)) != null)
             {
-                Debug.Log($"Jump node found at {jumpNode.x}, {jumpNode.y}");
                 jumpPoints.Add(jumpNode);
             }
         }
@@ -174,11 +183,11 @@ public class JPS
 
         List<Node> neighbors = new();
 
-        (int x, int y) direction = (Math.Clamp(node.x - node.parent.x, -1, 1), Math.Clamp(node.y - node.parent.y, -1, 1));
+        (int x, int y) direction = GetDirection(node.parent, node);
 
         if (direction.x != 0 && direction.y != 0) // Moving diagonally
         {
-            if (IsWalkable(node.x, node.y + direction.y)) neighbors.Add(nodes[node.x + direction.x, node.y + direction.y]);
+            if (IsWalkable(node.x + direction.x, node.y + direction.y)) neighbors.Add(nodes[node.x + direction.x, node.y + direction.y]);
             if (IsWalkable(node.x + direction.x, node.y)) neighbors.Add(nodes[node.x + direction.x, node.y]);
             if (IsWalkable(node.x, node.y + direction.y)) neighbors.Add(nodes[node.x, node.y + direction.y]);
         }
@@ -191,66 +200,9 @@ public class JPS
             if (IsWalkable(node.x, node.y + direction.y)) neighbors.Add(nodes[node.x, node.y + direction.y]);
         }
 
-        //neighbors.AddRange(GetForcedNeighbors(node.x, node.y, direction));
-
-        foreach (Node neighbor in neighbors)
-        {
-            neighbor.parent = node;
-        }
+        neighbors.AddRange(GetForcedNeighbors(node.x, node.y, direction));
 
         return neighbors;
-    }
-
-    private Node Jump(Node node, (int x, int y) direction, Node end)
-    {
-        int x = node.x + direction.x;
-        int y = node.y + direction.y;
-
-        if (!IsWalkable(x, y)) return null;
-
-        if (nodes[x, y] == end)
-        {
-            return nodes[x, y];
-        }
-
-        if (HasForcedNeighbor(x, y, direction))
-        {
-            Debug.Log($"Node at {x}, {y} had forced neighbor");
-            return nodes[x, y];
-        }
-
-        if (direction.x != 0 && direction.y != 0) // Moving diagonally
-        {
-            if (Jump(nodes[x, y], directions[(Array.IndexOf(directions, direction) - 1 + directions.Length) % directions.Length], end) != null)
-            {
-                return nodes[x, y];
-            }
-
-            if (Jump(nodes[x, y], directions[(Array.IndexOf(directions, direction) + 1) % directions.Length], end) != null)
-            {
-                return nodes[x, y];
-            }
-        }
-
-        return Jump(nodes[x, y], direction, end);
-    }
-
-    private bool HasForcedNeighbor(int x, int y, (int x, int y) direction)
-    {
-        if (direction.x != 0 && direction.y != 0) // Moving diagonally
-        {
-            return (!IsWalkable(x - direction.x, y) && IsWalkable(x - direction.x, y + direction.y)) || (!IsWalkable(x, y - direction.y) && IsWalkable(x + direction.x, y - direction.y));
-        }
-        else if (direction.y == 0) // Moving horizontally
-        {
-            return (!IsWalkable(x, y - 1) && IsWalkable(x + direction.x, y - 1)) || (!IsWalkable(x, y + 1) && IsWalkable(x + direction.x, y + 1));
-        }
-        else if (direction.x == 0) // Moving vertically
-        {
-            return (!IsWalkable(x - 1, y) && IsWalkable(x - 1, y + direction.y)) || (!IsWalkable(x + 1, y) && IsWalkable(x + 1, y + direction.y));
-        }
-
-        return false;
     }
 
     private List<Node> GetForcedNeighbors(int x, int y, (int x, int y) direction)
@@ -276,6 +228,64 @@ public class JPS
         return forcedNeighbors;
     }
 
+    private Node Jump(int x, int y, (int x, int y) direction, Node end)
+    {
+        if (!IsWalkable(x, y)) return null;
+
+        //Debug.Log($"Jumping at {x}, {y} in direction {direction}");
+
+        if (direction == (0, 0))
+        {
+            Debug.LogWarning($"Jump at {x}, {y} had no direction");
+            return null;
+        }
+
+        if (nodes[x, y] == end)
+        {
+            return nodes[x, y];
+        }
+
+        if (HasForcedNeighbor(x, y, direction))
+        {
+            //Debug.Log($"Node {x}, {y} ({direction}) had forced neighbor");
+            return nodes[x, y];
+        }
+
+        if (direction.x != 0 && direction.y != 0) // Moving diagonally
+        {
+            if (Jump(x, y + direction.y, (0, direction.y), end) != null || Jump(x + direction.x, y, (direction.x, 0), end) != null)
+            {
+                //Debug.Log($"Node {x}, {y} was moving diagonally ({direction}) and had a straight line with forced neighbor");
+                return nodes[x, y];
+            }
+        }
+
+        return Jump(x + direction.x, y + direction.y, direction, end);
+    }
+
+    private bool HasForcedNeighbor(int x, int y, (int x, int y) direction)
+    {
+        if (direction.x != 0 && direction.y != 0) // Moving diagonally
+        {
+            return (!IsWalkable(x - direction.x, y) && IsWalkable(x - direction.x, y + direction.y)) || (!IsWalkable(x, y - direction.y) && IsWalkable(x + direction.x, y - direction.y));
+        }
+        else if (direction.y == 0) // Moving horizontally
+        {
+            return (!IsWalkable(x, y - 1) && IsWalkable(x + direction.x, y - 1)) || (!IsWalkable(x, y + 1) && IsWalkable(x + direction.x, y + 1));
+        }
+        else if (direction.x == 0) // Moving vertically
+        {
+            return (!IsWalkable(x - 1, y) && IsWalkable(x - 1, y + direction.y)) || (!IsWalkable(x + 1, y) && IsWalkable(x + 1, y + direction.y));
+        }
+
+        return false;
+    }
+
+    private (int, int) GetDirection(Node from, Node to)
+    {
+        return (Math.Clamp(to.x - from.x, -1, 1), Math.Clamp(to.y - from.y, -1, 1));
+    }
+
     private bool IsWalkable(int x, int y)
     {
         return IsWithinGrid(x, y) && nodes[x, y].walkable;
@@ -295,6 +305,12 @@ public class JPS
         {
             path.Add(currentNode);
             currentNode = currentNode.parent;
+
+            if (path.Count > 10000)
+            {
+                Debug.LogWarning("Path was over 10 000 nodes (possible loop), returning null");
+                return null;
+            }
         }
 
         path.Add(startNode);

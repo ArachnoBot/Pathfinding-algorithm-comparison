@@ -36,6 +36,35 @@ public class TilemapManager : MonoBehaviour
         gameObject.transform.position = new Vector3(x, y, 0);
     }
 
+    public void ClearTilemap()
+    {
+        BoundsInt bounds = tilemap.cellBounds;
+
+        for (int x = 0; x < bounds.size.x; x++)
+        {
+            for (int y = 0; y < bounds.size.y; y++)
+            {
+                Vector3Int tilePos = new(x, y, 0);
+                Tile tile = tilemap.GetTile<Tile>(tilePos);
+
+                if (tile != null && (tile == closedTile || tile == openTile))
+                {
+                    tilemap.SetTile(tilePos, null);
+
+                    // Clear text instead of destroying objects, unity seems to do it async which can delete some text
+                    GameObject textObj = GameObject.Find($"Text_{x}_{y}");
+                    if (textObj != null)
+                    {
+                        TextMeshPro[] costTexts = textObj.GetComponentsInChildren<TextMeshPro>();
+                        costTexts[0].text = "";
+                        costTexts[1].text = "";
+                        costTexts[2].text = "";
+                    }
+                }
+            }
+        }
+    }
+
     public void AddStartTile(Node node)
     {
         tilemap.SetTile(new(node.x, node.y, 0), startTile);
