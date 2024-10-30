@@ -58,6 +58,7 @@ public class Dijkstra : IAlgorithm
                     int newGCost = currentNode.gCost + GetDistance(currentNode, neighbor);
                     if (newGCost < neighbor.gCost)
                     {
+                        neighbor.hCost = 0; // Reset node hCost set by other algorithms not to mess with node heap 
                         neighbor.gCost = newGCost;
                         neighbor.parent = currentNode;
 

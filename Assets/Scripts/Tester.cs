@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Numerics;
 using UnityEngine;
 
 public class Tester
@@ -33,16 +31,6 @@ public class Tester
             (float, int) result;
             int optimalPathCost;
 
-            for (int x = 0; x < gridWidth; x++)
-            {
-                for (int y = 0; y < gridHeight; y++)
-                {
-                    nodes[x, y].hCost = 0;
-                    nodes[x, y].gCost = 0;
-                    nodes[x, y].parent = null;
-                }
-            }
-
             result = algoManager.TestDjikstra(start, end);
             optimalPathCost = result.Item2;
             djikstraTime += result.Item1;
@@ -55,16 +43,6 @@ public class Tester
                 Debug.LogError($"A* found path with cost {result.Item2} but the optimal is {optimalPathCost}");
                 Debug.LogError($"start: {start.x}, {start.y}, end: {end.x}, {end.y}");
                 return;
-            }
-
-            for (int x = 0; x < gridWidth; x++)
-            {
-                for (int y = 0; y < gridHeight; y++)
-                {
-                    nodes[x, y].hCost = 0;
-                    nodes[x, y].gCost = 0;
-                    nodes[x, y].parent = null;
-                }
             }
 
             result = algoManager.TestJPS(start, end);
@@ -95,7 +73,7 @@ public class Tester
             start = GetRandomPoint();
         }
 
-        while (!IsWalkable(end.x, end.y) || start.x == end.x || start.y == end.y)
+        while (!IsWalkable(end.x, end.y) || start == end)
         {
             end = GetRandomPoint();
         }

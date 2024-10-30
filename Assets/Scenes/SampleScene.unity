@@ -437,12 +437,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27ace7c96237b3c44880b095eefbfb98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  start: {x: 2, y: 6}
-  end: {x: 109, y: 234}
-  map: {fileID: 2800000, guid: b71ca5a5ed782c845823a4dce835f02c, type: 3}
+  start: {x: 60, y: 50}
+  end: {x: 230, y: 230}
+  map: {fileID: 2800000, guid: 84204f093d5674f409ae2e0cf5e8fddd, type: 3}
   gridQuadObj: {fileID: 520306208}
   algoDelay: 0
-  testIterations: 500
+  testIterations: 1
 --- !u!1 &1445839962
 GameObject:
   m_ObjectHideFlags: 0

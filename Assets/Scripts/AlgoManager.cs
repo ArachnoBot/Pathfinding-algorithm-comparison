@@ -42,7 +42,7 @@ public class AlgoManager : MonoBehaviour
         }
         else
         {
-            end = new Vector2Int(gridWidth - 2, gridHeight - 2);
+            //end = new Vector2Int(gridWidth - 2, gridHeight - 2);
         }
 
         for (int x = 0; x < gridWidth; x++)
@@ -55,20 +55,26 @@ public class AlgoManager : MonoBehaviour
 
         tilemapManager = gameObject.GetComponent<TilemapManager>();
         tilemapManager.MoveTilemap(-(gridWidth / 2f), -(gridHeight / 2f));
+
+        int count = 0;
+
         for (int y = 0; y < map.height; y++)
         {
             for (int x = 0; x < map.width; x++)
             {
                 if (map.GetPixel(x, y) == Color.black)
                 {
+                    count++;
                     nodes[x, y].walkable = false;
                     tilemapManager.AddWallTile(x, y);
                 }
             }
         }
 
+        Debug.Log($"Map has {map.height * map.width} cells, {count} walls and {map.height * map.width - count} walkable, percentage of walls: {1.0f * count / (1.0f * map.height * map.width)}");
+
         lineRenderer = gameObject.AddComponent<LineRenderer>();
-        lineRenderer.widthMultiplier = .9f;
+        lineRenderer.widthMultiplier = .2f;
         lineRenderer.material = new Material(Shader.Find("Sprites/Default")); // Basic material
         lineRenderer.startColor = Color.red;
         lineRenderer.endColor = Color.red;
